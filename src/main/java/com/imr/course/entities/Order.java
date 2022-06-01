@@ -2,14 +2,20 @@ package com.imr.course.entities;
 
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.imr.course.entities.enums.OrderStatus;
@@ -31,6 +37,12 @@ public class Order implements Serializable{
 	@JoinColumn(name = "client_id")
 	private User client;
 	
+	@OneToMany(mappedBy = "id.order", fetch = FetchType.EAGER)
+	private Set<OrderItem> items = new HashSet<>();
+	
+	@OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
+	private Payment payment;
+	
 	public Order() {
 	
 	}
@@ -40,6 +52,10 @@ public class Order implements Serializable{
 		this.moment = moment;
 		setOrderStatus(orderStatus);
 		this.client = client;
+	}
+	
+	public Set<OrderItem> getItems(){
+		return this.items;
 	}
 
 	public Long getId() {
@@ -74,6 +90,24 @@ public class Order implements Serializable{
 
 	public void setClient(User client) {
 		this.client = client;
+	}
+	
+	public Payment getPayment() {
+		return payment;
+	}
+
+	public void setPayment(Payment payment) {
+		this.payment = payment;
+	}
+	
+	public Double getTotal() {
+		double total = 0.00;
+		
+		for(OrderItem item: this.items) {
+			total += item.getSubTotal();
+		}
+		
+		return total;
 	}
 
 	@Override
